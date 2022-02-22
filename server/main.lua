@@ -28,7 +28,7 @@ end
 local function loadHouseData()
     local HouseGarages = {}
     local Houses = {}
-    local result = exports.oxmysql:fetchSync('SELECT * FROM houselocations', {})
+    local result = MySQL.Sync.fetchAll('SELECT * FROM houselocations', {})
     if result[1] ~= nil then
         for k, v in pairs(result) do
             local owned = false
@@ -41,7 +41,7 @@ local function loadHouseData()
                 owned = v.owned,
                 price = v.price,
                 locked = true,
-                adress = v.label, 
+                adress = v.label,
                 tier = v.tier,
                 garage = garage,
                 decorations = {},
@@ -83,7 +83,7 @@ RegisterNetEvent('qb-multicharacter:server:loadUserData', function(cData)
         QBCore.Commands.Refresh(src)
         loadHouseData()
         TriggerClientEvent('apartments:client:setupSpawnUI', src, cData)
-        TriggerEvent("qb-log:server:CreateLog", "joinleave", "Loaded", "green", "**".. GetPlayerName(src) .. "** ("..cData.citizenid.." | "..src..") loaded..")
+        TriggerEvent("qb-log:server:CreateLog", "joinleave", "Loaded", "green", "**".. GetPlayerName(src) .. "** ("..(QBCore.Functions.GetIdentifier(src, 'discord') or 'undefined') .." |  ||"  ..(QBCore.Functions.GetIdentifier(src, 'ip') or 'undefined') ..  "|| | " ..(QBCore.Functions.GetIdentifier(src, 'license') or 'undefined') .." | " ..cData.citizenid.." | "..src..") loaded..")
 	end
 end)
 
@@ -123,13 +123,13 @@ QBCore.Functions.CreateCallback("qb-multicharacter:server:GetUserCharacters", fu
     local src = source
     local license = QBCore.Functions.GetIdentifier(src, 'license')
 
-    exports.oxmysql:fetch('SELECT * FROM players WHERE license = ?', {license}, function(result)
+    MySQL.Async.execute('SELECT * FROM players WHERE license = ?', {license}, function(result)
         cb(result)
     end)
 end)
 
 QBCore.Functions.CreateCallback("qb-multicharacter:server:GetServerLogs", function(source, cb)
-    exports.oxmysql:fetch('SELECT * FROM server_logs', {}, function(result)
+    MySQL.Async.execute('SELECT * FROM server_logs', {}, function(result)
         cb(result)
     end)
 end)
@@ -137,7 +137,7 @@ end)
 QBCore.Functions.CreateCallback("qb-multicharacter:server:setupCharacters", function(source, cb)
     local license = QBCore.Functions.GetIdentifier(source, 'license')
     local plyChars = {}
-    exports.oxmysql:fetch('SELECT * FROM players WHERE license = ?', {license}, function(result)
+    MySQL.Async.fetchAll('SELECT * FROM players WHERE license = ?', {license}, function(result)
         for i = 1, (#result), 1 do
             result[i].charinfo = json.decode(result[i].charinfo)
             result[i].money = json.decode(result[i].money)
@@ -149,7 +149,7 @@ QBCore.Functions.CreateCallback("qb-multicharacter:server:setupCharacters", func
 end)
 
 QBCore.Functions.CreateCallback("qb-multicharacter:server:getSkin", function(source, cb, cid)
-    local result = exports.oxmysql:fetchSync('SELECT * FROM playerskins WHERE citizenid = ? AND active = ?', {cid, 1})
+    local result = MySQL.Sync.fetchAll('SELECT * FROM playerskins WHERE citizenid = ? AND active = ?', {cid, 1})
     if result[1] ~= nil then
         cb(result[1].model, result[1].skin)
     else
